@@ -2,17 +2,18 @@ import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-t=np.arange(0,10,1)
+k=0.08
+t=np.arange(0,4,0.1)
 
 def func(n,t):
-    dndt=n*2
+    dndt=-k*n
     return dndt
 
-n0=1
+n0=1000
 n_t=odeint(func,n0,t)
-plt.plot(t,n_t[:,:n0*10])
+plt.plot(t,n_t)
 
 plt.xlabel('Время')
 plt.ylabel('Количество')
 
-plt.savefig('task_1_1.png')
+plt.savefig('task_1_2.png')
