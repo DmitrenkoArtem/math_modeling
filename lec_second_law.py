@@ -37,7 +37,7 @@ def animate(t):
     return ball,ball_line,
 
 a=FuncAnimation(fig,animate,frames=frames,interval=30)
-edge=30
+edge=15
 	
 ax.set_xlim(0,edge)
 ax.set_ylim(0,edge)
