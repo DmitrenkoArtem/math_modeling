@@ -7,25 +7,29 @@ frames=200
 t=np.linspace(0,5,frames)
 
 def move_func(z,t):
-    x,vx,y,vy=z
+    x,y,vx,vy=z
     
     dx_dt=vx
-    dvx_dt=0
     dy_dt=vy
-    dvy_dt=-g
+    dvx_dt=-k*vx**2
+    dvy_dt=-g-k*vy**2
     
-    return dx_dt,dvx_dt,dy_dt,dvy_dt
+    return dx_dt,dy_dt,dvx_dt,dvy_dt
 
+alpha=np.deg2rad(60)
+
+m=0.5
+k=0.1/m/1
 g=9.8
-v=15
-alpha=np.deg2rad(80)
 
+v0=20
 x0=0
-vx0=v*np.cos(alpha)
 y0=0
-vy0=v*np.sin(alpha)
 
-z0=x0,vx0,y0,vy0
+vx0=np.cos(alpha)*v0
+vy0=np.sin(alpha)*v0
+
+z0=x0,y0,vx0,vy0
 
 s=odeint(move_func,z0,t)
 
@@ -38,9 +42,9 @@ def animate(t):
     ball_line.set_data(s[:t,0],s[:t,2])
 
 a=FuncAnimation(fig,animate,frames=frames,interval=30)
-edge=15
+edge=40
 	
 ax.set_xlim(0,edge)
 ax.set_ylim(0,edge)
 	
-a.save('lec_second_law.gif',writer="pillow")
+a.save('task_1_1_2.gif',writer="pillow")
