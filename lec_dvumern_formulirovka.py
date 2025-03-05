@@ -37,7 +37,7 @@ ball_line,=plt.plot([],[],'-',color='r')
 def animate(i):
     ball.set_data([s[i][0]],[s[i][1]])
     ball_line.set_data(s[:i,0],s[:i,1])
-	
+
 a=FuncAnimation(fig,animate,frames=frames,interval=20)
 	
  
