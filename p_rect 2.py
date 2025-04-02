@@ -1,0 +1,162 @@
+import numpy as np
+from scipy.integrate import odeint
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+time=15 #продолжительность (с)
+interval=20 #время между кадрами (мс)
+frames=time*interval #количество кадров
+
+g=9.8
+
+t=np.linspace(0,time,frames) #время разделено на отрезки
+
+def fragment_movement_solve_func(z,t):
+    (rect_x,rect_y,rect_vx,rect_vy,rect_a,rect_omega)=z
+    dx_dt=rect_vx
+    dy_dt=rect_vy
+    dvx_dt=0
+    dvy_dt=-g
+    da_dt=rect_omega
+    domega_dt=0
+    return dx_dt,dy_dt,dvx_dt,dvy_dt,da_dt,domega_dt
+
+def fragment_collision_check_func(rect_vx,rect_vy,rect_omega,rect_datax,rect_datay,rect_y,rect_rotaxis_x,rect_rotaxis_y):
+    rect_y_min=min(rect_datay) #минимальная координата прямоугольника по y
+    rect2_y_max=max(rect2_datay0) #минимальная координата прямоугольнка 2 по y
+
+    distance_x=min(rect2_datax0)-max(rect_datax)
+    distance_y=rect_y_min-rect2_y_max
+    ground_distance=rect_y_min-ground_y
+
+    if distance_y<=0:
+        if ground_distance>0:
+            collision_point_y=rect_y_min
+            rect_rotaxis_y=collision_point_y
+            if distance_x<=0: #если прямоугольники пересекаются по х, то они сталкиваются
+                rect_vy=(rect_y*(rect_m+rect2_m)/(rect_m+rect2_m)+2*rect2_m*rect2_vy0/(rect_m+rect2_m))*rect_k
+                if distance_x<rect_w: #если прямоугольник выходит за границы, то он отталкивается
+                    rect_vx=-5
+                    rect_omega=np.pi/3.5
+                else: #если прямоугольник помещается в границах, то он покоится
+                    rect_vx=0
+        else:
+            collision_point_y=rect_y_min
+            rect_rotaxis_y=collision_point_y
+            rect_vy=(rect_y*(rect_m+ground_m)/(rect_m+ground_m)+2*ground_m*ground_vy0/(rect_m+ground_m))*rect_k
+        #elif 
+            #rect_a<np.pi/2:
+            #rect_omega=np.pi/3.5
+        #else:
+            #rect_omega=0
+    return rect_vx,rect_vy,rect_omega,rect_rotaxis_x,rect_rotaxis_y
+
+def seq_calc_func(rect_x,rect_y,rect_vx,rect_vy,rect_a,rect_omega,rect_rotaxis_x,rect_rotaxis_y):
+    seq_rect_datax=[rect_datax0] #последовательность данных по x
+    seq_rect_datay=[rect_datay0] #последовательность данных по y
+
+    seq_rect_rotaxis_data_x=[rect_rotaxis_x0]
+    seq_rect_rotaxis_data_y=[rect_rotaxis_y0]
+    
+    for frame in range(frames-1):
+        fragment_t=[t[frame],t[frame+1]] #выбор временного отрезка
+        fragment_z0=(rect_x,rect_y,rect_vx,rect_vy,rect_a,rect_omega)
+
+        fragment_solution=odeint(fragment_movement_solve_func,fragment_z0,fragment_t)
+
+        rect_x=fragment_solution[1,0]
+        rect_y=fragment_solution[1,1]
+        rect_vx=fragment_solution[1,2]
+        rect_vy=fragment_solution[1,3]
+        rect_a=fragment_solution[1,4]
+        rect_omega=fragment_solution[1,5]
+
+        fragment_rect_datax=(rect_fig_x-rect_rotaxis_x)*np.cos(rect_a)-(rect_fig_y-rect_rotaxis_y)*np.sin(rect_a)+rect_x
+        fragment_rect_datay=(rect_fig_y-rect_rotaxis_y)*np.cos(rect_a)+(rect_fig_x-rect_rotaxis_x)*np.sin(rect_a)+rect_y
+
+        seq_rect_datax.append(fragment_rect_datax)
+        seq_rect_datay.append(fragment_rect_datay)
+
+        seq_rect_rotaxis_data_x.append[rect_rotaxis_x]
+        seq_rect_rotaxis_data_y.append[rect_rotaxis_y]
+
+        rect_vx,rect_vy,rect_omega,rect_rotaxis_x,rect_rotaxis_y=fragment_collision_check_func(rect_vx,rect_vy,rect_omega,fragment_rect_datax,fragment_rect_datay,rect_y,rect_rotaxis_x,rect_rotaxis_y)
+
+    return seq_rect_datax,seq_rect_datay,seq_rect_rotaxis_data_x,seq_rect_rotaxis_data_y
+
+def animate_func(i):
+    x=seq_rect_datax[i]
+    y=seq_rect_datay[i]
+    rect.set_data([x],[y])
+    point_x=seq_rect_rotaxis_data_x[i]
+    point_y=seq_rect_rotaxis_data_y[i]
+    rect_rotaxis_point.set_data([point_x],[point_y])
+
+
+if __name__=='__main__':
+    #границы
+    ground_w=200
+    ground_m=1e30
+    ground_x=-100
+    ground_y=5
+
+    ground_vy0=0
+
+    #прямоугольники
+    rect_w=20
+    rect_h=10
+    rect_m=100
+    rect_x0=40
+    rect_y0=60
+    rect_vx0=0
+    rect_vy0=0
+    rect_a0=0
+    rect_omega0=0
+    rect_rotaxis_x0=rect_w/2
+    rect_rotaxis_y0=rect_h/2
+    rect_k=0.6 #коэффициент упругости
+
+    rect2_w=60
+    rect2_h=20
+    rect2_m=1e30
+    rect2_x0=70
+    rect2_y0=ground_y
+    rect2_vx0=0
+    rect2_vy0=0
+    rect2_a0=0
+
+
+    fig,ax=plt.subplots()
+
+    #координаты фигур, их начальное положение и создание
+    rect_fig_x=np.array([0,rect_w/2,rect_w/2,-rect_w/2,-rect_w/2,0]) #x координаты прямоугольника
+    rect_fig_y=np.array([0,0,rect_h,rect_h,0,0]) #y координаты прямоугольника
+    rect_datax0=rect_fig_x+rect_x0 #начальные х данные графика
+    rect_datay0=rect_fig_y+rect_y0 #начальные y данные графика
+    rect,=plt.plot([],[],'-',color='b') #добавление графика
+
+    rect_rotaxis_point,=plt.plot([],[],'o',color='g',ms=50) #график оси вращения
+
+    rect2_fig_x=np.array([0,rect2_w/2,rect2_w/2,-rect2_w/2,-rect2_w/2,0]) #x координаты прямоугольника 2
+    rect2_fig_y=np.array([0,0,rect2_h,rect2_h,0,0]) #y координаты прямоугольника 2
+    rect2_datax0=rect2_fig_x+rect2_x0 #начальные х данные графика
+    rect2_datay0=rect2_fig_y+rect2_y0 #начальные y данные графика
+    rect2,=plt.plot(rect2_datax0,rect2_datay0,'-',color='r') #добавление графика
+    
+    ground,=plt.plot([ground_x,ground_x+ground_w],[ground_y,ground_y],'-',color='r') #добавление графика
+
+
+    #получение данных для анимирования
+    seq_rect_datax,seq_rect_datay,seq_rect_rotaxis_data_x,seq_rect_rotaxis_data_y=seq_calc_func(rect_x0,rect_y0,rect_vx0,rect_vy0,rect_a0,rect_omega0,rect_rotaxis_x0,rect_rotaxis_y0)
+ 
+
+    a=FuncAnimation(fig,animate_func,frames=frames,interval=interval)
+
+
+    edge=100
+    plt.axis('equal')
+    ax.set_xlim(0,edge)
+    ax.set_ylim(0,edge)
+
+
+    a.save('result.gif',writer='pillow')
